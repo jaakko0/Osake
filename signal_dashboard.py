@@ -15,7 +15,7 @@ def load_signals():
 
 # ▶⃣ Streamlit-sovellus
 def main():
-    st.title("\ud83d\udcca Osakesignaalit - Mallin perusteella")
+    st.title("Osakesignaalit – Mallin perusteella")
 
     df = load_signals()
 
