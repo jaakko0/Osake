@@ -3,11 +3,13 @@ import pandas as pd
 import numpy as np
 import sqlite3
 import joblib
+from ticker_list import get_all_tickers
 from generate_training_data import detect_uptrend, detect_consolidation, detect_high_flag, detect_ascending_triangle
 
 DB_PATH = "signals.db"
 MODEL_PATH = "model.pkl"
-TICKERS = ["AAPL", "MSFT", "GOOG", "NVDA", "TSLA", "NOKIA.HE", "KNEBV.HE", "FORTUM.HE", "UPM.HE"]
+
+TICKERS = get_all_tickers()
 
 def load_model():
     return joblib.load(MODEL_PATH)
@@ -18,7 +20,7 @@ def scan_market():
 
     for ticker in TICKERS:
         try:
-            df = yf.download(ticker, period="6mo", interval="1d")
+            df = yf.download(ticker, period="2y", interval="1d")
             if df.empty or len(df) < 50:
                 continue
 
@@ -41,9 +43,9 @@ def scan_market():
             ]]
 
             prob = model.predict_proba(feature_vector)[0][1]
-            expected_return = np.random.uniform(0.05, 0.15)  # Mallin tuottama odotettu nousu, vaihda tarvittaessa
+            expected_return = np.random.uniform(0.05, 0.15)
 
-            if prob >= 0.85:
+            if prob >= 0.5:
                 results.append({
                     "date": pd.Timestamp.today().strftime("%Y-%m-%d"),
                     "ticker": ticker,
