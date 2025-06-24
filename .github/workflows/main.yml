@@ -1,0 +1,36 @@
+name: Auto Scan Market
+
+on:
+  schedule:
+    - cron: '0 5 * * *'  # Ajo joka päivä klo 5:00 UTC
+  workflow_dispatch:  # Voit ajaa myös käsin GitHubista
+
+jobs:
+  run-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Kloonaa repositorio
+      uses: actions/checkout@v3
+
+    - name: Asenna Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Asenna riippuvuudet
+      run: |
+        pip install -r requirements.txt
+
+    - name: Aja scan_market.py
+      run: |
+        python scan_market.py
+
+    - name: Päivitä signals.db GitHubiin
+      run: |
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        git add signals.db
+        git commit -m "Automaattinen päivitys signals.db"
+        git push
+      continue-on-error: true  # Estää kaatumisen jos ei muutoksia
