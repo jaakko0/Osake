@@ -28,42 +28,43 @@ def get_signal_tags(row):
     return ", ".join(tags)
 
 def main():
-    st.title("Osakesignaalit – Mallin perusteella")
+    st.title("Osakesignaalit – Aktiiviset mahdollisuudet")
 
     df = load_signals()
 
     if df.empty:
-        st.info("Ei signaaleja tietokannassa. Aja ensin run_all.py luodaksesi signaaleja.")
+        st.info("Ei aktiivisia signaaleja. Aja run_all.py luodaksesi uusia.")
         return
 
     df["Signals"] = df.apply(get_signal_tags, axis=1)
     df["Probability %"] = (df["probability"] * 100).round(2)
     df["Expected Return %"] = (df["expected_return"] * 100).round(2)
 
-    st.sidebar.header("Suodatus")
-    tickers = st.sidebar.multiselect("Valitse tickerit", sorted(df['ticker'].unique()), default=None)
-    min_prob = st.sidebar.slider("Minimitodennäköisyys", 0.5, 1.0, 0.9)
-    start_date = st.sidebar.date_input("Alkupäivä", df['date'].min())
-
-    st.sidebar.header("Pattern-suodatus")
-    filter_triangle = st.sidebar.checkbox("Ascending Triangle", value=False)
-    filter_high_flag = st.sidebar.checkbox("High Flag", value=False)
-    filter_moving_avg = st.sidebar.checkbox("Hinta yli 200DMA", value=False)
+    st.sidebar.header("Näytä osakkeet joissa:")
+    filter_triangle = st.sidebar.checkbox("Ascending Triangle", value=True)
+    filter_high_flag = st.sidebar.checkbox("High Flag", value=True)
+    filter_moving_avg = st.sidebar.checkbox("Hinta yli 200DMA", value=True)
 
     filtered = df.copy()
-    if tickers:
-        filtered = filtered[filtered['ticker'].isin(tickers)]
-    filtered = filtered[filtered['probability'] >= min_prob]
-    filtered = filtered[filtered['date'] >= pd.to_datetime(start_date)]
 
+    # Näytetään vain ne rivit joissa vähintään yksi valituista täyttyy
+    conditions = []
     if filter_triangle:
-        filtered = filtered[filtered['is_ascending_triangle'] == 1]
+        conditions.append(filtered['is_ascending_triangle'] == 1)
     if filter_high_flag:
-        filtered = filtered[filtered['is_high_flag'] == 1]
+        conditions.append(filtered['is_high_flag'] == 1)
     if filter_moving_avg:
-        filtered = filtered[filtered['above_200dma'] == 1]
+        conditions.append(filtered['above_200dma'] == 1)
 
-    st.subheader("Suodatetut signaalit")
+    if conditions:
+        combined = conditions[0]
+        for cond in conditions[1:]:
+            combined |= cond
+        filtered = filtered[combined]
+    else:
+        filtered = filtered.iloc[0:0]  # Tyhjä DataFrame jos mikään filtteri ei valittuna
+
+    st.subheader("Aktiiviset osakkeet joissa signaali on täyttynyt")
     display_cols = ["date", "ticker", "close", "Probability %", "Expected Return %", "Signals"]
     st.dataframe(filtered[display_cols].reset_index(drop=True))
 
