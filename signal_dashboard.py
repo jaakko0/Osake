@@ -6,10 +6,9 @@ import os
 
 DB_PATH = "signals.db"
 
-# ▶⃣ Lue signaalit tietokannasta
 def load_signals():
     if not os.path.exists(DB_PATH):
-        return pd.DataFrame()  # Palautetaan tyhjä DataFrame jos tietokantaa ei ole
+        return pd.DataFrame()
     try:
         conn = sqlite3.connect(DB_PATH)
         df = pd.read_sql("SELECT * FROM signals", conn)
@@ -20,7 +19,6 @@ def load_signals():
         st.error(f"Virhe ladattaessa tietokantaa: {e}")
         return pd.DataFrame()
 
-# ▶⃣ Luo signaalikuvaus
 def get_signal_tags(row):
     tags = []
     if row['is_uptrend']: tags.append("Uptrend")
@@ -29,7 +27,6 @@ def get_signal_tags(row):
     if row['is_ascending_triangle']: tags.append("Asc. Triangle")
     return ", ".join(tags)
 
-# ▶⃣ Streamlit-sovellus
 def main():
     st.title("Osakesignaalit – Mallin perusteella")
 
@@ -78,9 +75,6 @@ def main():
             y='count:Q'
         ).properties(height=300)
         st.altair_chart(chart, use_container_width=True)
-
-if __name__ == "__main__":
-    main()
 
 if __name__ == "__main__":
     main()
